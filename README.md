@@ -85,17 +85,24 @@ git clone git@github.com:MIPT-PD-PP-1/finance-tracker.git
 cd finance-tracker
 ```
 
-2. Сборка и запуск
+2. Настройка переменных окружения
+```bash
+cp .env.example .env
+```
+
+Отредактируйте `.env` при необходимости.
+
+3. Сборка и запуск
 ```bash
 docker compose up -d --build
 ```
 
-3. Проверка состояния
+4. Проверка состояния
 ```bash
 docker compose ps
 ```
 
-4. Остановка
+5. Остановка
 ```bash
 docker compose down
 ```
