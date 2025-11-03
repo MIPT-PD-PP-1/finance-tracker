@@ -76,3 +76,34 @@ erDiagram
     USER ||--o{ TRANSACTION : "creates"
     GROUP ||--o{ TRANSACTION : "contains"
 ```
+
+## 🚀 Запуск проекта
+
+1. Клонирование репозитория
+```bash
+git clone git@github.com:MIPT-PD-PP-1/finance-tracker.git
+cd finance-tracker
+```
+
+2. Настройка переменных окружения
+```bash
+cp .env.example .env
+```
+
+Отредактируйте `.env` при необходимости.
+
+3. Сборка и запуск
+```bash
+docker compose up -d --build
+```
+
+4. Проверка состояния
+```bash
+docker compose ps
+```
+
+5. Остановка
+```bash
+docker compose down
+```
+
