@@ -16,6 +16,19 @@ class UserResponse(UserBase):
     id: int
     model_config = ConfigDict(from_attributes=True)
 
+class UserLogin(BaseModel):
+    login: str
+    password: str
+
+class ChangePassword(BaseModel):
+    old_password: str
+    new_password: str
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+    user_id: int
+
 class GroupBase(BaseModel):
     name: str
 
