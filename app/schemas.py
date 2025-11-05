@@ -35,6 +35,9 @@ class GroupBase(BaseModel):
 class GroupCreate(GroupBase):
     pass
 
+class GroupUpdate(BaseModel):
+    name: str
+
 class GroupResponse(GroupBase):
     id: int
     owner_id: int
