@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Numeric, Date, ForeignKey, Enum as SQLEnum
+from sqlalchemy import Column, Integer, String, Numeric, Date, ForeignKey, Enum as SQLEnum, Table
 from sqlalchemy.orm import relationship
 from app.database import Base
 import enum
@@ -6,6 +6,13 @@ import enum
 class TransactionType(str, enum.Enum):
     income = "income"
     expense = "expense"
+
+user_group_association = Table(
+    'user_group_association',
+    Base.metadata,
+    Column('user_id', Integer, ForeignKey('users.id'), primary_key=True),
+    Column('group_id', Integer, ForeignKey('groups.id'), primary_key=True)
+)
 
 class User(Base):
     __tablename__ = "users"
@@ -16,7 +23,11 @@ class User(Base):
     login = Column(String, unique=True, nullable=False, index=True)
     password = Column(String, nullable=False)
 
-    groups = relationship("Group", back_populates="owner")
+    groups = relationship(
+        "Group",
+        secondary=user_group_association,
+        back_populates="users"
+    )
     transactions = relationship("Transaction", back_populates="user")
 
 class Group(Base):
@@ -24,9 +35,13 @@ class Group(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False)
-    owner_id = Column(Integer, ForeignKey("users.id"), nullable=False)
 
-    owner = relationship("User", back_populates="groups")
+    users = relationship(
+        "User",
+        secondary=user_group_association,
+        back_populates="groups",
+        lazy="selectin"
+    )
     transactions = relationship("Transaction", back_populates="group")
 
 class Transaction(Base):
