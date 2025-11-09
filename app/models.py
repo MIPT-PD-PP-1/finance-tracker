@@ -1,7 +1,8 @@
-from sqlalchemy import Column, Integer, String, Numeric, Date, ForeignKey, Enum as SQLEnum
+from sqlalchemy import Column, Integer, String, Numeric, Date, DateTime, ForeignKey, Enum as SQLEnum
 from sqlalchemy.orm import relationship
 from app.database import Base
 import enum
+
 
 class TransactionType(str, enum.Enum):
     income = "income"
