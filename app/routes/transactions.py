@@ -2,14 +2,14 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
-from app.utills import pagination_params, apply_filters
+from app.utils import pagination_params, apply_filters
 from app.database import get_db
 from app.models import User, Group, Transaction
 from app.schemas import TransactionCreate, TransactionUpdate, TransactionResponse, Page, TransactionFilters
 from app.routes.users import get_current_user
 from app.routes.groups import get_group
 
-router = APIRouter(prefix="api/transactions", tags=["transactions"])
+router = APIRouter(prefix="/api/transactions", tags=["transactions"])
 
 router.get("", response_model=Page[TransactionResponse])
 async def get_transactions_user(

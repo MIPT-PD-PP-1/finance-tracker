@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from app.database import init_db
-from app.routes import users, groups
+from app.routes import users, groups, transactions
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -12,6 +12,7 @@ app = FastAPI(title="Finance Tracker API", lifespan=lifespan)
 
 app.include_router(users.router)
 app.include_router(groups.router)
+app.include_router(transactions.router)
 
 @app.get("/api")
 async def read_root():
@@ -20,4 +21,3 @@ async def read_root():
 @app.get("/health")
 async def health_check():
     return {"status": "healthy"}
-
