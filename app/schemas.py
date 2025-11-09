@@ -1,7 +1,7 @@
 from pydantic import BaseModel, ConfigDict
 from datetime import date
 from decimal import Decimal
-from typing import Optional
+from typing import Optional, List
 from app.models import TransactionType
 
 class UserBase(BaseModel):
@@ -40,7 +40,7 @@ class GroupUpdate(BaseModel):
 
 class GroupResponse(GroupBase):
     id: int
-    owner_id: int
+    users: List[UserResponse] = []
     model_config = ConfigDict(from_attributes=True)
 
 class TransactionBase(BaseModel):
