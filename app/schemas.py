@@ -56,6 +56,7 @@ class TransactionCreate(TransactionBase):
     category: str = Field(..., min_length=1, max_length=50)
     amount: float = Field(..., gt=0)
     transaction_date: date
+    group_id: Optional[int] = None
 
 class TransactionUpdate(TransactionBase):
     user_id: int

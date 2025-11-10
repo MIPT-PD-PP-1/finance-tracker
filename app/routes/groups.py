@@ -28,7 +28,8 @@ async def create_group(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
-    new_group = Group(name=group_data.name)
+    new_group = Group(name=group_data.name,
+                      owner_id=current_user.id)
     new_group.users.append(current_user)
 
     db.add(new_group)

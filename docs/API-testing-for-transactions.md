@@ -12,7 +12,7 @@ TOKEN=$(curl -s -X POST http://localhost:8000/api/auth/login \
 
 echo "Token: $TOKEN"
 ```
-## 1. Получить список транзакций с пагинацией и фильтрами
+## 1. Получить список транзакций с пагинацией и фильтрами для пользователя
 ```bash
 Базовый запрос для конкретного пользователя
 curl -X "GET" \
@@ -44,6 +44,7 @@ curl -X "POST" \
   "category": "Food",
   "amount": 350,
   "transaction_date": "2025-11-09"
+  "group_id": 7
 }' | jq
 ```
 ## 4. Обновить транзакцию
@@ -60,7 +61,7 @@ curl -X "PUT" \
   "amount": 150,
   "transaction_date": "2025-11-09",
   "user_id": 2,
-  "group_id": 0
+  "group_id": 7
 }' | jq
 ```
 ## 5. Удалить транзакцию
@@ -70,3 +71,19 @@ curl -X "DELETE" \
   -H "accept: */*" \
   -H "Authorization: Bearer $TOKEN" | jq
 ```
+## 6. Получить транзакции группы
+```bash
+curl -X "GET" \
+  "http://localhost:8000/api/transactions/group/7?page=1&size=20&type=expense&user_id=2" \
+  -H "accept: application/json" \
+  -H "Authorization: Bearer $TOKEN" | jq
+```
+## 7. Получить статистику группы
+```bash
+curl -X "GET" \
+  "http://localhost:8000/api/transactions/group/7/stats" \
+  -H "accept: application/json" \
+  -H "Authorization: Bearer $TOKEN" | jq
+```
+
+
