@@ -345,3 +345,4 @@ async def delete_transaction(
         status_code=status.HTTP_200_OK,
         content={"message": f"Транзакция с id {transaction_id} успешно удалена"}
     )
+

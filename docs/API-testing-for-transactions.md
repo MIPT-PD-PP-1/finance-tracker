@@ -7,31 +7,13 @@ TOKEN=$(curl -s -X POST http://localhost:8000/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{
     "login": "estepanov",
-    "password": "SecurePassword"
+    "password": "NewSecurePassword"
   }' | jq -r '.access_token')
 
 echo "Token: $TOKEN"
 ```
-## 1. Получить список транзакций с пагинацией и фильтрами для пользователя
-```bash
-Базовый запрос для конкретного пользователя
-curl -X "GET" \
-  "http://localhost:8000/api/transactions?page=1&size=20&type=expense&user_id=2" \
-  -H "accept: application/json" \
-  -H "Authorization: Bearer $TOKEN" | jq
 
-С фильтрами (категория: еда)
-curl -X "GET" \
-  "http://localhost:8000/api/transactions?page=1&size=20&type=expense&category=Food&user_id=2" \
-  -H "accept: application/json" \
-  -H "Authorization: Bearer $TOKEN" | jq
-```
-## 2. Получить конкретную транзакцию
-```bash
-curl -X GET http://localhost:8000/api/transactions/12 \
-  -H "Authorization: Bearer $TOKEN" | jq
-```
-## 3. Создать транзакцию
+## 1. Создать транзакцию
 ```bash
 curl -X "POST" \
   "http://localhost:8000/api/transactions" \
@@ -47,7 +29,8 @@ curl -X "POST" \
   "group_id": 7
 }' | jq
 ```
-## 4. Обновить транзакцию
+
+## 2. Обновить транзакцию
 ```bash
 curl -X "PUT" \
   "http://localhost:8000/api/transactions/13" \
@@ -64,26 +47,49 @@ curl -X "PUT" \
   "group_id": 7
 }' | jq
 ```
-## 5. Удалить транзакцию
+
+## 3. Посмотреть транзакции
+
+**Посмотреть транзакции**
+
 ```bash
-curl -X "DELETE" \
-  "http://localhost:8000/api/transactions/7" \
-  -H "accept: */*" \
+curl -X GET "http://localhost:8000/api/transactions?page=1&size=20" \
   -H "Authorization: Bearer $TOKEN" | jq
 ```
-## 6. Получить транзакции группы
+
+**С фильтрами (категория: еда)**
+
+```bash
+curl -X GET "http://localhost:8000/api/transactions?page=1&size=20&category=Food" \
+  -H "Authorization: Bearer $TOKEN" | jq
+```
+
+**Конкретная транзакция**
+
+```bash
+curl -X GET http://localhost:8000/api/transactions/1 \
+  -H "Authorization: Bearer $TOKEN" | jq
+```
+
+## 4. Удалить транзакцию
+
+```bash
+curl -X DELETE http://localhost:8000/api/transactions/1 \
+  -H "Authorization: Bearer $TOKEN" | jq
+```
+
+## 5. Получить транзакции группы
 ```bash
 curl -X "GET" \
   "http://localhost:8000/api/transactions/group/7?page=1&size=20&type=expense&user_id=2" \
   -H "accept: application/json" \
   -H "Authorization: Bearer $TOKEN" | jq
 ```
-## 7. Получить статистику группы
+
+## 6. Получить статистику группы
 ```bash
 curl -X "GET" \
   "http://localhost:8000/api/transactions/group/7/stats" \
   -H "accept: application/json" \
   -H "Authorization: Bearer $TOKEN" | jq
 ```
-
-
