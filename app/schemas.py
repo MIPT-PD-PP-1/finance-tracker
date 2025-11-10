@@ -40,7 +40,7 @@ class GroupUpdate(BaseModel):
 
 class GroupResponse(GroupBase):
     id: int
-    owner_id: int
+    users: List[UserResponse] = []
     model_config = ConfigDict(from_attributes=True)
 
 class TransactionBase(BaseModel):

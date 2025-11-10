@@ -49,7 +49,28 @@ curl -X PUT http://localhost:8000/api/groups/1 \
   }' | jq
 ```
 
-## 5. Удалить группу
+## 5. Добавить пользователя в группу
+
+```bash
+curl -X POST http://localhost:8000/api/groups/1/users/2 \
+  -H "Authorization: Bearer $TOKEN" | jq
+```
+
+## 6. Список пользователей группы
+
+```bash
+curl -X GET http://localhost:8000/api/groups/1/users \
+  -H "Authorization: Bearer $TOKEN" | jq
+```
+
+## 7. Удалить пользователя из группы
+
+```bash
+curl -X DELETE http://localhost:8000/api/groups/1/users/2 \
+  -H "Authorization: Bearer $TOKEN" | jq
+```
+
+## 8. Удалить группу
 
 ```bash
 curl -X DELETE http://localhost:8000/api/groups/1 \
