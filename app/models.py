@@ -3,7 +3,6 @@ from sqlalchemy.orm import relationship
 from app.database import Base
 import enum
 
-
 class TransactionType(str, enum.Enum):
     income = "income"
     expense = "expense"
