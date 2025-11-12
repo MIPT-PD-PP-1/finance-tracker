@@ -17,6 +17,8 @@ os.environ.setdefault("RUNNING_ALEMBIC", "true")
 os.environ.setdefault("DATABASE_URL", "sqlite+aiosqlite:///./app.db")
 
 from app.database import Base as _DetectedBase
+# Import models so they are registered with Base.metadata
+from app import models
 
 target_metadata = getattr(_DetectedBase, "metadata", None)
 
