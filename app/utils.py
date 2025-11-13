@@ -2,7 +2,7 @@ from passlib.context import CryptContext
 from datetime import datetime, timedelta, timezone
 from jose import JWTError, jwt
 from app.schemas import TransactionFilters
-from app.models import Transaction
+from app.models import Transaction, Group
 from fastapi import Query
 import os
 
@@ -69,11 +69,12 @@ def apply_filters(query: Query, filters: TransactionFilters) -> Query:
         query = query.where(Transaction.category == filters.category)
     if filters.amount:
         query = query.where(Transaction.amount >= filters.amount)
-    if filters.transaction_date:
-        query = query.where(Transaction.transaction_date >= filters.transaction_date)
+    if filters.transaction_datetime:
+        query = query.where(Transaction.transaction_datetime >= filters.transaction_datetime)
     if filters.user_id:
         query = query.where(Transaction.user_id == filters.user_id)
-    if filters.group_id:
-        query = query.where(Transaction.group_id == filters.group_id)
+    if filters.group_ids:
+        query = query.join(Transaction.groups).where(Group.id.in_(group_filters)).distinct()
+
     return query
 

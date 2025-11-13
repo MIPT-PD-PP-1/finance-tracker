@@ -1,8 +1,9 @@
 from pydantic import BaseModel, ConfigDict, Field
-from datetime import date
+from datetime import datetime
 from decimal import Decimal
 from typing import Optional, List, Generic, TypeVar
 from app.models import TransactionType
+from fastapi import Query
 
 class UserBase(BaseModel):
     first_name: str
@@ -44,67 +45,61 @@ class GroupResponse(GroupBase):
     model_config = ConfigDict(from_attributes=True)
 
 class TransactionBase(BaseModel):
-    name: str
-    type: TransactionType
-    category: str
-    amount: Decimal
-    transaction_date: date
+    model_config = ConfigDict(from_attributes=True)
+
+    name: str = Field(..., min_length=1, max_length=100, description="Название транзакции")
+    type: TransactionType = Field(TransactionType.expense, description="Тип транзакции пополнение/расход")
+    category: str = Field(..., min_length=1, max_length=50, description="Категория")
+    amount: Decimal = Field(..., gt=0, description="Сумма транзакции")
+    description: Optional[str] = Field(None, description="Описание")
 
 class TransactionCreate(TransactionBase):
-    name: str = Field(..., min_length=1, max_length=100)
-    type: Optional[str] = Field("expense")
-    category: str = Field(..., min_length=1, max_length=50)
-    amount: float = Field(..., gt=0)
-    transaction_date: date
+    group_ids: List[int] = Field(default=[], description="Список ID групп")
 
-class TransactionUpdate(TransactionBase):
-    user_id: int
-    group_id: Optional[int] = None
-    name: Optional[str] = None
-    type: Optional[str] = Field("expense")
-    category: Optional[str] = None
-    amount: Optional[Decimal] = None
-    transaction_date: Optional[date] = None
+class TransactionUpdate(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    name: Optional[str] = Field(None, min_length=1, max_length=100, description="Название транзакции")
+    type: Optional[TransactionType] = None
+    category: Optional[str] = Field(None, min_length=1, max_length=50, description="Категория")
+    amount: Optional[Decimal] = Field(None, gt=0, description="Сумма транзакции")
+    transaction_datetime: Optional[datetime] = Field(None, description="Дата и время транзакции")
+    description: Optional[str] = Field(None, description="Описание")
+    group_ids: Optional[List[int]] = Field(None, description="Список ID групп")
 
 class TransactionResponse(TransactionBase):
-    id: int
-    name: str
-    type: str
-    category: str
-    amount: float
-    transaction_date: date
-    user_id: int
-    group_id: Optional[int] = None
+    id: int = Field(..., description="ID транзакции")
+    transaction_datetime: datetime = Field(..., description="Дата и время транзакции")
+    user_id: int = Field(..., description="ID пользователя")
+    groups: List[GroupResponse] = Field(default=[], description="Информация о группах")
 
 class TransactionFilters(BaseModel):
     name: Optional[str] = None
-    type: Optional[TransactionType] = "expense"
+    type: Optional[TransactionType] = None
     category: Optional[str] = None
     amount: Optional[Decimal] = None
-    transaction_date: Optional[date] = None
+    transaction_datetime: Optional[datetime] = None
     user_id: Optional[int] = None
-    group_id: Optional[int] = None
+    group_ids: Optional[List[int]] = None
 
-    @classmethod
-    def dependence(
-            cls,
-            name: Optional[str] = None,
-            type: Optional[TransactionType] = "expense",
-            category: Optional[str] = None,
-            amount: Optional[Decimal] = None,
-            transaction_date: Optional[date] = None,
-            user_id: Optional[int] = None,
-            group_id: Optional[int] = None,
-    ):
-        return cls(
-            name=name,
-            type=type,
-            category=category,
-            amount=amount,
-            transaction_date=transaction_date,
-            user_id=user_id,
-            group_id=group_id
-        )
+    model_config = ConfigDict(from_attributes=True)
+
+async def get_transaction_filters(
+    name: Optional[str] = Query(None),
+    type: Optional[TransactionType] = Query(None),
+    category: Optional[str] = Query(None),
+    amount: Optional[Decimal] = Query(None),
+    transaction_datetime: Optional[datetime] = Query(None),
+    group_ids: Optional[List[int]] = Query(None)
+) -> TransactionFilters:
+    return TransactionFilters(
+        name=name,
+        type=type,
+        category=category,
+        amount=amount,
+        transaction_datetime=transaction_datetime,
+        group_ids=group_ids
+    )
 
 T = TypeVar("T")
 

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Numeric, Date, DateTime, ForeignKey, Enum as SQLEnum, Table
+from sqlalchemy import Column, Integer, String, Numeric, DateTime, ForeignKey, Enum as SQLEnum, Table, text
 from sqlalchemy.orm import relationship
 from app.database import Base
 import enum
@@ -11,6 +11,13 @@ user_group_association = Table(
     'user_group_association',
     Base.metadata,
     Column('user_id', Integer, ForeignKey('users.id'), primary_key=True),
+    Column('group_id', Integer, ForeignKey('groups.id'), primary_key=True)
+)
+
+transaction_group_association = Table(
+    'transaction_group_association',
+    Base.metadata,
+    Column('transaction_id', Integer, ForeignKey('transactions.id'), primary_key=True),
     Column('group_id', Integer, ForeignKey('groups.id'), primary_key=True)
 )
 
@@ -29,12 +36,14 @@ class User(Base):
         back_populates="users"
     )
     transactions = relationship("Transaction", back_populates="user")
+    owned_groups = relationship("Group", back_populates="owner")
 
 class Group(Base):
     __tablename__ = "groups"
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False)
+    owner_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
 
     users = relationship(
         "User",
@@ -42,7 +51,12 @@ class Group(Base):
         back_populates="groups",
         lazy="selectin"
     )
-    transactions = relationship("Transaction", back_populates="group")
+    owner = relationship("User", back_populates="owned_groups")
+    transactions = relationship("Transaction",
+                                secondary=transaction_group_association,
+                                back_populates="groups",
+                                lazy="selectin"
+                                )
 
 class Transaction(Base):
     __tablename__ = "transactions"
@@ -52,10 +66,14 @@ class Transaction(Base):
     type = Column(SQLEnum(TransactionType), nullable=False)
     category = Column(String, nullable=False)
     amount = Column(Numeric(10, 2), nullable=False)
-    transaction_date = Column(Date, nullable=False)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    group_id = Column(Integer, ForeignKey("groups.id"), nullable=True)
-
+    transaction_datetime = Column(DateTime(timezone=True), nullable=False,
+                                  server_default=text("TIMEZONE('Europe/Moscow', CURRENT_TIMESTAMP)"))
+    description = Column(String, nullable=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     user = relationship("User", back_populates="transactions")
-    group = relationship("Group", back_populates="transactions")
+    groups = relationship("Group",
+                          secondary=transaction_group_association,
+                          back_populates="transactions",
+                          lazy="selectin"
+                          )
 
