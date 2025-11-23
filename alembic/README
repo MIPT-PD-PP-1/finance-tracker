@@ -1,0 +1,19 @@
+# Alembic setup for this project
+
+## What I added
+- `alembic/` with `env.py` preconfigured to import your SQLAlchemy Base.
+- `alembic/versions/202511101800_29ea10_initial.py` as a placeholder initial migration.
+- `alembic.ini` with detected DB URL: `sqlite:///./app.db`.
+
+## How to use locally
+1) Create/activate your virtualenv and install requirements (ensure `alembic` and `sqlalchemy` are installed).
+2) Check that `alembic/env.py` correctly imports your `Base`. If not, set `target_metadata` manually.
+3) (Recommended) Recreate an autogeneration-based migration from your models:
+   ```bash
+   alembic revision --autogenerate -m "initial"
+   ```
+   Delete the placeholder migration I created and use the autogen file instead.
+4) Apply migrations:
+   ```bash
+   alembic upgrade head
+   ```
