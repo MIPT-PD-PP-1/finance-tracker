@@ -74,7 +74,7 @@ def apply_filters(query: Query, filters: TransactionFilters) -> Query:
     if filters.user_id:
         query = query.where(Transaction.user_id == filters.user_id)
     if filters.group_ids:
-        query = query.join(Transaction.groups).where(Group.id.in_(group_filters)).distinct()
+        query = query.join(Transaction.groups).where(Group.id.in_(filters.group_ids)).distinct()
 
     return query
 
