@@ -205,7 +205,7 @@ async def create_transaction(
             if current_user not in group.users:
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
-                    detail=f"Недостаточно прав для добавления транзакции в группу {group_id}"
+                    detail=f"Недостаточно прав для добавления транзакции в группу {group.id}"
                 )
 
     new_transaction = Transaction(
@@ -259,7 +259,7 @@ async def update_transaction(
                 if current_user not in group.users:
                     raise HTTPException(
                         status_code=status.HTTP_403_FORBIDDEN,
-                        detail=f"Недостаточно прав для изменения транзакции в группе {group_id}"
+                        detail=f"Недостаточно прав для изменения транзакции в группе {group.id}"
                     )
 
         transaction.groups = groups
@@ -272,7 +272,7 @@ async def update_transaction(
 
     return transaction
 
-@router.delete("/{transaction_id}", status_code=status.HTTP_204_NO_CONTENT,
+@router.delete("/{transaction_id}", status_code=status.HTTP_200_OK,
                summary="Удаление транзакции",
                description="Удалить из бд транзакцию по ее id")
 async def delete_transaction(

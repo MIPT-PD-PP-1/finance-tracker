@@ -67,7 +67,7 @@ class Transaction(Base):
     category = Column(String, nullable=False)
     amount = Column(Numeric(10, 2), nullable=False)
     transaction_datetime = Column(DateTime(timezone=True), nullable=False,
-                                  server_default=text("TIMEZONE('Europe/Moscow', CURRENT_TIMESTAMP)"))
+                                  server_default=text("CURRENT_TIMESTAMP"))
     description = Column(String, nullable=True)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     user = relationship("User", back_populates="transactions")
