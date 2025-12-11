@@ -1,12 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, func
 from typing import Optional
 from app.database import get_db
-from app.models import User
-from app.schemas import UserCreate, UserResponse, UserLogin, Token, ChangePassword
-from app.utils import hash_password, verify_password, create_access_token, decode_access_token
+from app.models import User, Transaction
+from app.schemas import UserCreate, UserResponse, UserLogin, Token, ChangePassword, TransactionFilters, get_transaction_filters, PeriodForGroupBy
+from app.utils import hash_password, verify_password, create_access_token, decode_access_token, apply_filters
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 security = HTTPBearer()
@@ -121,3 +121,56 @@ async def refresh_token(
 async def get_current_user_info(current_user: User = Depends(get_current_user)):
     return current_user
 
+@router.get("/me/statistics")
+async def get_group_statistics(
+    period: PeriodForGroupBy = "month",
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+    filters: TransactionFilters = Depends(get_transaction_filters),
+):
+    income_query = select(func.sum(Transaction.amount)).where(Transaction.user_id == current_user.id, 
+        Transaction.type == "income")
+    income_query = apply_filters(income_query, filters)
+    income_stats = await db.execute(income_query)
+    total_income = income_stats.scalar() or 0
+
+    expense_query = select(func.sum(Transaction.amount)).where(Transaction.user_id == current_user.id, 
+        Transaction.type == "expense")
+    expense_query = apply_filters(expense_query, filters)
+    expense_stats = await db.execute(expense_query)
+    total_expense = expense_stats.scalar() or 0
+
+    balance = total_income - total_expense
+
+    count_query = select(func.count(Transaction.id)).where(Transaction.user_id == current_user.id)
+    count_query = apply_filters(count_query, filters)
+    count_stats = await db.execute(count_query)
+    total_count = count_stats.scalar() or 0
+
+    groupped_by_category_query = select(Transaction.category, 
+        func.sum(Transaction.amount)).where(Transaction.user_id == current_user.id,
+        Transaction.type == "expense")
+    groupped_by_category_query = apply_filters(groupped_by_category_query, filters)
+    groupped_by_category_query = groupped_by_category_query.group_by(Transaction.category)
+    groupped_by_category_stats = await db.execute(groupped_by_category_query)
+    groupped_by_category_expense = groupped_by_category_stats.scalars().all()
+
+    period_truncated = func.date_trunc(period, Transaction.transaction_datetime).label("period")
+    groupped_by_period_query = select(period_truncated, func.sum(Transaction.amount)).where(Transaction.user_id == current_user.id,
+        Transaction.type == "expense")
+    groupped_by_period_query = apply_filters(groupped_by_period_query, filters)
+    groupped_by_period_query = groupped_by_period_query.group_by(period_truncated)
+    groupped_by_period_stats = await db.execute(groupped_by_period_query)
+    groupped_by_period_expense = groupped_by_period_stats.scalars().all()
+
+    return {
+                "First name": current_user.first_name,
+        "Last name": current_user.last_name,
+        "User ID": current_user.id,
+        "Balance": balance,
+        "Total income": total_income,
+        "Total expense": total_expense,
+        "Total count of transactions": total_count,
+        "Groupped by category expense": groupped_by_category_expense,
+        "Groupped by period expense": groupped_by_period_expense
+    }
