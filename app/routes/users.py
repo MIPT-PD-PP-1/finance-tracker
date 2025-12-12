@@ -147,30 +147,36 @@ async def get_group_statistics(
     count_stats = await db.execute(count_query)
     total_count = count_stats.scalar() or 0
 
-    groupped_by_category_query = select(Transaction.category, 
-        func.sum(Transaction.amount)).where(Transaction.user_id == current_user.id,
+    grouped_by_category_query = select(Transaction.category,
+        func.sum(Transaction.amount).label("amount")).where(Transaction.user_id == current_user.id,
         Transaction.type == "expense")
-    groupped_by_category_query = apply_filters(groupped_by_category_query, filters)
-    groupped_by_category_query = groupped_by_category_query.group_by(Transaction.category)
-    groupped_by_category_stats = await db.execute(groupped_by_category_query)
-    groupped_by_category_expense = groupped_by_category_stats.scalars().all()
+    grouped_by_category_query = apply_filters(grouped_by_category_query, filters)
+    grouped_by_category_query = grouped_by_category_query.group_by(Transaction.category)
+    grouped_by_category_stats = await db.execute(grouped_by_category_query)
+    grouped_by_category_expense = [
+        {"category": row.category, "amount": float(row.amount)}
+        for row in grouped_by_category_stats.all()
+    ]
 
     period_truncated = func.date_trunc(period, Transaction.transaction_datetime).label("period")
-    groupped_by_period_query = select(period_truncated, func.sum(Transaction.amount)).where(Transaction.user_id == current_user.id,
+    grouped_by_period_query = select(period_truncated, func.sum(Transaction.amount).label("amount")).where(Transaction.user_id == current_user.id,
         Transaction.type == "expense")
-    groupped_by_period_query = apply_filters(groupped_by_period_query, filters)
-    groupped_by_period_query = groupped_by_period_query.group_by(period_truncated)
-    groupped_by_period_stats = await db.execute(groupped_by_period_query)
-    groupped_by_period_expense = groupped_by_period_stats.scalars().all()
+    grouped_by_period_query = apply_filters(grouped_by_period_query, filters)
+    grouped_by_period_query = grouped_by_period_query.group_by(period_truncated)
+    grouped_by_period_stats = await db.execute(grouped_by_period_query)
+    grouped_by_period_expense = [
+        {"period": row.period.isoformat() if row.period else None, "amount": float(row.amount)}
+        for row in grouped_by_period_stats.all()
+    ]
 
     return {
-                "First name": current_user.first_name,
-        "Last name": current_user.last_name,
-        "User ID": current_user.id,
-        "Balance": balance,
-        "Total income": total_income,
-        "Total expense": total_expense,
-        "Total count of transactions": total_count,
-        "Groupped by category expense": groupped_by_category_expense,
-        "Groupped by period expense": groupped_by_period_expense
+        "first_name": current_user.first_name,
+        "last_name": current_user.last_name,
+        "user_id": current_user.id,
+        "balance": balance,
+        "total_income": total_income,
+        "total_expense": total_expense,
+        "total_count_of_transactions": total_count,
+        "grouped_by_category_expense": grouped_by_category_expense,
+        "grouped_by_period_expense": grouped_by_period_expense
     }
