@@ -1,4 +1,4 @@
-.PHONY: db-up db-down install setup migrate run clean
+.PHONY: db-up db-down install setup migrate run clean test test-db
 
 db-up:
 	docker compose up -d db
@@ -31,4 +31,12 @@ clean:
 	rm -rf venv
 	find . -type d -name "__pycache__" -exec rm -rf {} +
 	find . -type f -name "*.pyc" -delete
+
+test-db:
+	@docker exec -it $$(docker compose ps -q db) psql -U $${POSTGRES_USER:-postgres} -c "CREATE DATABASE finance_tracker_test;" 2>/dev/null || true
+
+test: db-up test-db
+	export $$(cat .env.local | xargs) && \
+	export TEST_DATABASE_URL="postgresql+asyncpg://$${POSTGRES_USER:-postgres}:$${POSTGRES_PASSWORD:-postgres}@localhost:5432/finance_tracker_test" && \
+	. venv/bin/activate && pytest tests/ -v
 

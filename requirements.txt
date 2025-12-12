@@ -9,3 +9,8 @@ passlib[argon2]==1.7.4
 python-multipart==0.0.20
 alembic==1.17.2
 
+# Testing dependencies
+pytest==8.3.4
+pytest-asyncio==0.24.0
+httpx==0.28.1
+
