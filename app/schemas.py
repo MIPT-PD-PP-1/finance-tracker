@@ -1,7 +1,7 @@
 from pydantic import BaseModel, ConfigDict, Field
 from datetime import datetime
 from decimal import Decimal
-from typing import Optional, List, Generic, TypeVar
+from typing import Optional, List, Generic, TypeVar, Literal
 from app.models import TransactionType
 from fastapi import Query
 
@@ -110,4 +110,5 @@ class Page(BaseModel, Generic[T]):
     size: int
     pages: int
 
-
+class PeriodForGroupBy(BaseModel):
+    period: Literal["year", "month", "day"]
