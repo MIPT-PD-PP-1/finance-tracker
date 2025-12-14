@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, String, Numeric, DateTime, ForeignKey, Enum as SQLEnum, Table, text
+from sqlalchemy import (Column, Integer, String, Numeric, DateTime, ForeignKey, Enum as SQLEnum,
+                        Table, text, Boolean)
 from sqlalchemy.orm import relationship
 from app.database import Base
 import enum
@@ -70,6 +71,9 @@ class Transaction(Base):
                                   server_default=text("CURRENT_TIMESTAMP"))
     description = Column(String, nullable=True)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    is_recurring = Column(Boolean, nullable=False, default=False)
+    recurring_period_days = Column(Integer, nullable=True)
+    next_run = Column(DateTime(timezone=True), nullable=True, server_default=text("CURRENT_TIMESTAMP"))
     user = relationship("User", back_populates="transactions")
     groups = relationship("Group",
                           secondary=transaction_group_association,

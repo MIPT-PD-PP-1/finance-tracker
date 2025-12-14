@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
+from datetime import datetime, timedelta
 from app.utils import pagination_params, apply_filters
 from app.database import get_db
 from app.models import User, Group, Transaction
@@ -44,6 +45,48 @@ async def get_transactions_by_user(
         size=size,
         pages=(total + size - 1) // size if total > 0 else 0,
     )
+
+@router.get("/upcoming",
+            summary="Предстоящие регулярные платежи",
+            description="Получить список предстоящих платежей"
+            )
+async def upcoming_reminders(
+        days_ahead: int = 0,
+        current_user: User = Depends(get_current_user),
+        db: AsyncSession = Depends(get_db)
+):
+    now = datetime.utcnow()
+    future_date = now + timedelta(days=days_ahead)
+
+    query = select(Transaction).where(
+        Transaction.is_recurring == True,
+        Transaction.next_run.between(now, future_date)
+    )
+
+    query = query.where(Transaction.user_id == current_user.id)
+
+    result = await db.execute(query)
+    transactions = result.scalars().all()
+
+    if len(transactions) == 0:
+        return {
+            "message": "Предстоящих платежей за указанный период нету"
+        }
+
+    return [
+        {
+            "id": t.id,
+            "name": t.name,
+            "amount": t.amount,
+            "category": t.category,
+            "next_payment": t.next_run.strftime("%d.%m.%Y"),
+            "days_left": (t.next_run.date() - now.date()).days,
+            "urgency": "high" if (t.next_run.date() - now.date()).days <= 1
+            else "medium" if (t.next_run.date() - now.date()).days <= 3
+            else "low"
+        }
+        for t in transactions
+    ]
 
 
 @router.get("/group/{group_id}", response_model=Page[TransactionResponse],
@@ -183,6 +226,22 @@ async def get_transaction(
     return transaction
 
 
+@router.get("", response_model=list[TransactionResponse],
+            summary="Просмотр регулярных транзакций",
+            description="Получить список регулярных транзакций"
+            )
+async def get_recurring_transactions(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    query = select(Transaction).where(
+        Transaction.user_id == current_user.id,
+        Transaction.is_recurring == True
+    )
+    result = await db.execute(query)
+    return result.scalars().all()
+
+
 @router.post("", response_model=TransactionResponse, status_code=status.HTTP_201_CREATED,
              summary="Создание новой транзакции",
              description="Записать транзакцию в БД")
@@ -208,10 +267,21 @@ async def create_transaction(
                     detail=f"Недостаточно прав для добавления транзакции в группу {group.id}"
                 )
 
+    if transaction_data.is_recurring:
+        if not transaction_data.recurring_period_days:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Для регулярной транзакции необходимо указать recurring_period_days"
+            )
+
     new_transaction = Transaction(
         **transaction_data.model_dump(exclude={"group_ids"}),
         user_id=current_user.id,
-        groups=groups
+        groups=groups,
+        next_run = (
+            datetime.utcnow() + timedelta(days=transaction_data.recurring_period_days)
+            if transaction_data.is_recurring else None
+        )
     )
 
     db.add(new_transaction)
@@ -266,6 +336,22 @@ async def update_transaction(
 
     for field, value in update_data.items():
         setattr(transaction, field, value)
+
+    if transaction_data.is_recurring is not None:
+        transaction.is_recurring = transaction_data.is_recurring
+
+        if transaction.is_recurring:
+            if not transaction_data.recurring_period_days and not transaction.recurring_period_days:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Регулярная транзакция должна иметь recurring_period_days"
+                )
+
+            period = transaction_data.recurring_period_days or transaction.recurring_period_days
+            transaction.next_run = datetime.utcnow() + timedelta(days=period)
+        else:
+            transaction.recurring_period_days = None
+            transaction.next_run = None
 
     await db.commit()
     await db.refresh(transaction)
