@@ -52,6 +52,8 @@ class TransactionBase(BaseModel):
     category: str = Field(..., min_length=1, max_length=50, description="Категория")
     amount: Decimal = Field(..., gt=0, description="Сумма транзакции")
     description: Optional[str] = Field(None, description="Описание")
+    is_recurring: bool = False
+    recurring_period_days: Optional[int] = None
 
 class TransactionCreate(TransactionBase):
     group_ids: List[int] = Field(default=[], description="Список ID групп")
@@ -66,6 +68,8 @@ class TransactionUpdate(BaseModel):
     transaction_datetime: Optional[datetime] = Field(None, description="Дата и время транзакции")
     description: Optional[str] = Field(None, description="Описание")
     group_ids: Optional[List[int]] = Field(None, description="Список ID групп")
+    is_recurring: Optional[bool] = None
+    recurring_period_days: Optional[int] = None
 
 class TransactionResponse(TransactionBase):
     id: int = Field(..., description="ID транзакции")
