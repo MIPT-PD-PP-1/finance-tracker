@@ -67,6 +67,7 @@ curl -X POST http://localhost:8000/api/transactions \
 ```
 
 ## 2. Обновить транзакцию
+
 ```bash
 curl -X PUT http://localhost:8000/api/transactions/1 \
   -H "accept: application/json" \
@@ -120,6 +121,7 @@ curl -X DELETE http://localhost:8000/api/transactions/1 \
 ```
 
 ## 5. Получить транзакции группы
+
 ```bash
 curl -X GET "http://localhost:8000/api/transactions/group/1?page=1&size=20" \
   -H "accept: application/json" \
@@ -127,8 +129,10 @@ curl -X GET "http://localhost:8000/api/transactions/group/1?page=1&size=20" \
 ```
 
 ## 6. Получить статистику группы
+
 ```bash
 curl -X GET "http://localhost:8000/api/transactions/group/1/stats" \
   -H "accept: application/json" \
   -H "Authorization: Bearer $TOKEN" | jq
 ```
+

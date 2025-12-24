@@ -143,63 +143,6 @@ async def get_transactions_by_group(
     )
 
 
-@router.get("/group/{group_id}/stats",
-            summary="Просмотр статистики группы",
-            description="Получить статистику доходов/расходов группы, баланс группы по id")
-async def get_group_transactions_stats(
-        group_id: int,
-        current_user: User = Depends(get_current_user),
-        db: AsyncSession = Depends(get_db)
-):
-
-    group_result = await db.execute(
-        select(Group).where(Group.id == group_id)
-    )
-    group = group_result.scalars().first()
-
-    if not group:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Группа не найдена"
-        )
-
-    if current_user not in group.users:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Недостаточно прав для просмотра этой группы"
-        )
-
-    income_stats = await db.execute(
-        select(func.sum(Transaction.amount)
-               ).join(Transaction.groups).where(Group.id == group_id,
-            Transaction.type == "income"
-        )
-    )
-    total_income = income_stats.scalar() or 0
-
-    expense_stats = await db.execute(
-        select(func.sum(Transaction.amount)
-               ).join(Transaction.groups).where(Group.id == group_id,
-            Transaction.type == "expense"
-        )
-    )
-    total_expense = expense_stats.scalar() or 0
-
-    count_stats = await db.execute(
-        select(func.count(Transaction.id)
-               ).join(Transaction.groups).where(Group.id == group_id)
-    )
-    total_count = count_stats.scalar() or 0
-
-    return {
-        "group_id": group_id,
-        "total_income": total_income,
-        "total_expense": total_expense,
-        "balance": total_income - total_expense,
-        "total_transactions": total_count
-    }
-
-
 @router.get("/{transaction_id}", response_model=TransactionResponse,
             summary="Просмотр транзакции",
             description="Получить транзакцию по id")
@@ -226,7 +169,7 @@ async def get_transaction(
     return transaction
 
 
-@router.get("", response_model=list[TransactionResponse],
+@router.get("/recurring", response_model=list[TransactionResponse],
             summary="Просмотр регулярных транзакций",
             description="Получить список регулярных транзакций"
             )
@@ -388,3 +331,4 @@ async def delete_transaction(
         status_code=status.HTTP_200_OK,
         content={"message": f"Транзакция с id {transaction_id} успешно удалена"}
     )
+

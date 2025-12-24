@@ -116,3 +116,4 @@ class Page(BaseModel, Generic[T]):
 
 class PeriodForGroupBy(BaseModel):
     period: Literal["year", "month", "day"]
+

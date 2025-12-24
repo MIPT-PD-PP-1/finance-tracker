@@ -180,3 +180,4 @@ async def get_group_statistics(
         "grouped_by_category_expense": grouped_by_category_expense,
         "grouped_by_period_expense": grouped_by_period_expense
     }
+

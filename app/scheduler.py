@@ -131,3 +131,4 @@ def start_scheduler():
 
 def shutdown_scheduler():
     scheduler.shutdown()
+
